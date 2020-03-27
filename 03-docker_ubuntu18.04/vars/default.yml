@@ -1,0 +1,10 @@
+---
+pip_source: |
+  [global]
+  timeout = 60
+  index-url = https://mirrors.aliyun.com/pypi/simple/
+
+create_containers: 1
+default_container_name: test
+default_container_image: hello-world
+default_container_command: sleep 1d

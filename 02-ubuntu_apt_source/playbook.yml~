@@ -1,0 +1,35 @@
+#################################################
+# DO Community Playbooks: Docker
+#################################################
+---
+- hosts: all
+  become: true
+  vars_files:
+    - vars/default.yml
+  vars:
+    apt_source: |
+      deb http://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse
+      deb http://mirrors.aliyun.com/ubuntu/ bionic-security main restricted universe multiverse
+      deb http://mirrors.aliyun.com/ubuntu/ bionic-updates main restricted universe multiverse
+      deb http://mirrors.aliyun.com/ubuntu/ bionic-proposed main restricted universe multiverse
+      deb http://mirrors.aliyun.com/ubuntu/ bionic-backports main restricted universe multiverse
+      deb-src http://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse
+      deb-src http://mirrors.aliyun.com/ubuntu/ bionic-security main restricted universe multiverse
+      deb-src http://mirrors.aliyun.com/ubuntu/ bionic-updates main restricted universe multiverse
+      deb-src http://mirrors.aliyun.com/ubuntu/ bionic-proposed main restricted universe multiverse
+      deb-src http://mirrors.aliyun.com/ubuntu/ bionic-backports main restricted universe multiverse
+
+  tasks:
+    - name: checking if the apt source.list exists
+      stat:
+        path: /etc/apt sources.list
+      register: stat_result
+
+    - name: Backup apt source.list
+      command: creates="/etc/apt/sources.list.bak" mv /etc/apt/sources.list /etc/apt/sources.list.bak
+      when: stat_result.stat.exists == True
+
+    - name: New apt source.list
+      copy:
+        dest: "/etc/apt/sources.list"
+        content: "{{ apt_source }}"

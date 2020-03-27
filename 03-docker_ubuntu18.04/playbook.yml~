@@ -1,0 +1,73 @@
+#################################################
+# DO Community Playbooks: Docker
+#################################################
+---
+- hosts: all
+  become: true
+  vars_files:
+    - vars/default.yml
+  vars:
+    apt_source: |
+      deb http://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse
+      deb http://mirrors.aliyun.com/ubuntu/ bionic-security main restricted universe multiverse
+      deb http://mirrors.aliyun.com/ubuntu/ bionic-updates main restricted universe multiverse
+      deb http://mirrors.aliyun.com/ubuntu/ bionic-proposed main restricted universe multiverse
+      deb http://mirrors.aliyun.com/ubuntu/ bionic-backports main restricted universe multiverse
+      deb-src http://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse
+      deb-src http://mirrors.aliyun.com/ubuntu/ bionic-security main restricted universe multiverse
+      deb-src http://mirrors.aliyun.com/ubuntu/ bionic-updates main restricted universe multiverse
+      deb-src http://mirrors.aliyun.com/ubuntu/ bionic-proposed main restricted universe multiverse
+      deb-src http://mirrors.aliyun.com/ubuntu/ bionic-backports main restricted universe multiverse
+
+  tasks:
+    - name: checking if the apt source.list exists
+      stat:
+        path: /etc/apt sources.list
+      register: stat_result
+
+    - name: Backup apt source.list
+      command: creates="/etc/apt/sources.list.bak" mv /etc/apt/sources.list /etc/apt/sources.list.bak
+      when: stat_result.stat.exists == True
+
+    - name: New apt source.list
+      copy:
+        dest: "/etc/apt/sources.list"
+        content: "{{ apt_source }}"
+
+    # - name: Install aptitude using apt
+    #   apt: name=aptitude state=latest update_cache=yes force_apt_get=yes
+
+    # - name: Install required system packages
+    #   apt: name={{ item }} state=latest update_cache=yes
+    #   loop: [ 'apt-transport-https', 'ca-certificates', 'curl', 'vim', 'git', 'software-properties-common', 'python3-pip', 'virtualenv', 'python3-setuptools']
+
+    # - name: Add Docker GPG apt Key
+    #   apt_key:
+    #     url: https://download.docker.com/linux/ubuntu/gpg
+    #     state: present
+
+    # - name: Add Docker Repository
+    #   apt_repository:
+    #     repo: deb https://download.docker.com/linux/ubuntu bionic stable
+    #     state: present
+
+    # - name: Update apt and install docker-ce
+    #   apt: update_cache=yes name=docker-ce state=latest
+
+    # - name: Install Docker Module for Python
+    #   pip:
+    #     name: docker
+
+    # - name: Pull default Docker image
+    #   docker_image:
+    #     name: "{{ default_container_image }}"
+    #     source: pull
+
+    # # Creates the number of containers defined by the variable create_containers, using values from vars file
+    # - name: Create default containers
+    #   docker_container:
+    #     name: "{{ default_container_name }}{{ item }}"
+    #     image: "{{ default_container_image }}"
+    #     command: "{{ default_container_command }}"
+    #     state: present
+    #   with_sequence: count={{ create_containers }}
