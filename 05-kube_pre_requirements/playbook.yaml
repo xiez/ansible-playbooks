@@ -1,0 +1,50 @@
+- hosts: all
+  become: true
+  vars:
+    daemon_json: |
+      {
+        "exec-opts": ["native.cgroupdriver=systemd"],
+        "log-driver": "json-file",
+        "log-opts": {
+          "max-size": "100m"
+        },
+        "storage-driver": "overlay2"
+      }
+  
+  tasks:
+    # see https://germaniumhq.com/2019/02/14/2019-02-14-Disabling-Swap-for-Kubernetes-in-an-Ansible-Playbook/
+    - name: Disable SWAP since kubernetes cant work with swap enabled (1/2)
+      shell: |
+        swapoff -a
+      when: ansible_swaptotal_mb > 0
+
+    - name: Disable SWAP in fstab since kubernetes cant work with swap enabled (2/2)
+      replace:
+        path: /etc/fstab
+        regexp: '^([^#].*?\sswap\s+sw\s+.*)$'
+        replace: '# \1'
+      when: ansible_swaptotal_mb > 0
+
+    - name: Setup docker daemon
+      copy:
+        dest: "/etc/docker/daemon.json"
+        content: "{{ daemon_json }}"
+
+    - name: Make sure that docker.service.d directory exists
+      file:
+        path: '/etc/systemd/system/docker.service.d'
+        state: 'directory'
+        owner: 'root'
+        group: 'root'
+        mode: '0755'
+
+    - name: Reload docker daemon
+      shell: |
+        systemctl daemon-reload
+        systemctl restart docker
+
+    - name: Change the hostname to our standard
+      hostname:
+        name="{{ inventory_hostname }}"
+      when:
+        ansible_fqdn != ansible_ssh_host
