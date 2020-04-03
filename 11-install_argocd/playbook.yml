@@ -1,0 +1,31 @@
+- hosts: master
+
+  tasks:
+    - name: copy argo-cd.yaml
+      copy:
+        src: ./argo-cd.yaml
+        dest: /home/ubuntu/argo-cd.yaml
+        owner: ubuntu
+        group: ubuntu
+        mode: '0644'
+    
+    - name: install ArgoCD
+      shell: |
+        kubectl create namespace argocd
+        kubectl apply -n argocd -f /home/ubuntu/argo-cd.yaml
+
+    - name: copy ingress.yaml
+      copy:
+        src: ./ingress.yaml
+        dest: /home/ubuntu/ingress.yaml
+        owner: ubuntu
+        group: ubuntu
+        mode: '0644'
+        
+    - name: change service type to ingress
+      shell: |
+        kubectl apply -n argocd -f /home/ubuntu/ingress.yaml >> argocd_ingress.txt
+      args:
+        chdir: $HOME
+        creates: argocd_ingress.txt
+        
