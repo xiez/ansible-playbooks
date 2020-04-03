@@ -1,30 +1,27 @@
 - hosts: master
 
   tasks:
-    - name: copy argo-cd.yaml
-      copy:
-        src: ./argo-cd.yaml
-        dest: /home/ubuntu/argo-cd.yaml
-        owner: ubuntu
-        group: ubuntu
-        mode: '0644'
+    - name: Creates directory
+      file:
+        path: /home/ubuntu/argocd
+        state: directory
     
+    - name: copy argo-cd.yaml and ingress.yaml
+      copy:
+        src: "{{ item }}"
+        dest: /home/ubuntu/argocd/{{ item }}
+      with_items:
+        - ./argo-cd.yaml
+        - ./ingress.yaml
+
     - name: install ArgoCD
       shell: |
         kubectl create namespace argocd
-        kubectl apply -n argocd -f /home/ubuntu/argo-cd.yaml
+        kubectl apply -n argocd -f /home/ubuntu/argocd/argo-cd.yaml
 
-    - name: copy ingress.yaml
-      copy:
-        src: ./ingress.yaml
-        dest: /home/ubuntu/ingress.yaml
-        owner: ubuntu
-        group: ubuntu
-        mode: '0644'
-        
     - name: change service type to ingress
       shell: |
-        kubectl apply -n argocd -f /home/ubuntu/ingress.yaml >> argocd_ingress.txt
+        kubectl apply -n argocd -f /home/ubuntu/argocd/ingress.yaml >> argocd_ingress.txt
       args:
         chdir: $HOME
         creates: argocd_ingress.txt

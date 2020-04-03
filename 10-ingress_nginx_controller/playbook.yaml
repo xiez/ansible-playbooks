@@ -1,0 +1,20 @@
+- hosts: master
+
+  tasks:
+    - name: Creates directory
+      file:
+        path: /home/ubuntu/nginx-ingress
+        state: directory
+
+    - name: copy mandatory.yaml and service-nodeport.yaml
+      copy:
+        src: "{{ item }}"
+        dest: /home/ubuntu/nginx-ingress/{{ item }}
+      with_items:
+        - ./mandatory.yaml
+        - ./service-nodeport.yaml
+
+    - name: install ingress-nginx
+      shell: |
+        kubectl apply -f /home/ubuntu/nginx-ingress/mandatory.yaml
+        kubectl apply -f /home/ubuntu/nginx-ingress/service-nodeport.yaml
