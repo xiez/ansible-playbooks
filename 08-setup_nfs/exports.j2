@@ -1,0 +1,1 @@
+/var/nfs/general{% for item in workers %}    {{item}}(rw,sync,no_subtree_check){% endfor %}

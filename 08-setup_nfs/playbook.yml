@@ -1,0 +1,44 @@
+- hosts: master
+  become: true
+  vars:
+    workers: ['10.6.2.22', '10.6.2.23']
+  tasks:
+    - name: Ensure NFS utilities are installed.
+      apt:
+        name: ['nfs-common', 'nfs-kernel-server']
+        state: present
+
+    - name: Ensure NFS dir created
+      file:
+        path: /var/nfs/general
+        state: directory
+        owner: nobody
+        group: nogroup
+
+    - name: Template exports file.
+      template:
+        src: exports.j2
+        dest: /etc/exports
+        owner: root
+        group: root
+        mode: 0644
+      notify: restart nfs-server
+
+    - name: Ensure nfs is running.
+      service:
+        name: nfs-kernel-server
+        state: started
+        enabled: yes
+  handlers:
+    - name: restart nfs-server
+      service:
+        name: nfs-kernel-server
+        state: restarted
+
+- hosts: workers
+  become: true
+  tasks:
+   - name: Ensure NFS utilities are installed.
+     apt:
+       name: ['nfs-common']
+       state: present
